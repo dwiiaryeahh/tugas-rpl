@@ -1,0 +1,11 @@
+import { Activity, Clock3, MessageSquare, Ticket, UserRound } from 'lucide-react'
+
+const eventIcon = (name = '') => name.toLowerCase().includes('tiket dibuat') ? Ticket : name.toLowerCase().includes('worklog') || name.toLowerCase().includes('saw') ? Activity : name.toLowerCase().includes('komentar') ? MessageSquare : name.toLowerCase().includes('sla') ? Clock3 : UserRound
+
+export function TicketActivity({ events = [] }) {
+  return <div className="timeline">{events.map((event, index) => { const Icon = eventIcon(event.event); return <div key={`${event.event}-${index}`}><i className="timeline-icon timeline-blue"><Icon size={13} /></i><span><strong>{event.event}</strong><small>{event.actor} · {event.at}</small></span></div> })}</div>
+}
+
+export function CommentsPanel({ comments, onSubmit, currentRole }) {
+  return <section className="panel detail-section"><div className="section-heading"><div><h2>Komentar</h2><p>Komentar internal hanya terlihat oleh tim support.</p></div></div><div className="comment-list">{comments.length ? comments.map((comment, index) => <article className="comment-item" key={`${comment.author}-${index}`}><div className="profile-avatar">{comment.author.split(' ').map((part) => part[0]).slice(0, 2).join('')}</div><div><div className="comment-meta"><strong>{comment.author}</strong><span>{comment.at}</span><em>{comment.visibility}</em></div><p>{comment.text}</p></div></article>) : <p className="muted-copy">Belum ada komentar pada tiket ini.</p>}</div><form className="inline-composer" onSubmit={(event) => { event.preventDefault(); const data = new FormData(event.currentTarget); if (String(data.get('comment') || '').trim()) { onSubmit({ text: String(data.get('comment')).trim(), visibility: data.get('visibility') }); event.currentTarget.reset() } }}><label className="sr-only" htmlFor="ticket-comment">Tulis komentar</label><textarea id="ticket-comment" name="comment" rows="2" placeholder="Tulis komentar atau pembaruan..." required /><div>{currentRole === 'Pelapor' ? <input type="hidden" name="visibility" value="Public" /> : <select name="visibility" aria-label="Visibilitas komentar" defaultValue="Internal"><option>Public</option><option>Internal</option></select>}<button className="button button-primary" type="submit">Kirim komentar</button></div></form></section>
+}

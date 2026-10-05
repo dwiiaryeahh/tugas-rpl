@@ -1,0 +1,9 @@
+{
+  "name": "Prioritas Service Desk",
+  "short_name": "Prioritas",
+  "description": "Sistem pendukung keputusan prioritas tiket operasional.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#202630"
+}
