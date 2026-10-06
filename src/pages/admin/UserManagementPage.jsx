@@ -6,7 +6,15 @@ import { PageHeading } from '../../components/common/Badges'
 import { roles } from '../../data/seed'
 
 const permissions = [
-  ['Buat tiket', '✓', '✓', 'Opsional', '✓', '✓', '—'], ['Lihat semua tiket', 'Milik sendiri', '✓', 'Assigned', '✓', '✓', 'Baca'], ['Klasifikasi & kriteria', '—', '✓', '—', '✓', '✓', '—'], ['Assignment', '—', '✓', '—', '✓', '✓', '—'], ['Worklog & penyelesaian', '—', 'Terbatas', '✓', '✓', '✓', '—'], ['Override prioritas', '—', '—', '—', '✓', 'Opsional', '—'], ['Konfigurasi SPK / SLA', '—', '—', '—', 'Terbatas', '✓', '—'], ['Laporan', 'Milik sendiri', 'Terbatas', 'Terbatas', '✓', '✓', '✓'], ['Audit & pengguna', '—', '—', '—', 'Terbatas', '✓', '—'],
+  ['Buat tiket', '✓', '✓', 'Opsional', '✓', '✓', '—'],
+  ['Lihat semua tiket', 'Milik sendiri', '✓', 'Assigned', '✓', '✓', 'Baca'],
+  ['Klasifikasi & kriteria', '—', '✓', '—', '✓', '✓', '—'],
+  ['Assignment', '—', '✓', '—', '✓', '✓', '—'],
+  ['Worklog & penyelesaian', '—', 'Terbatas', '✓', '✓', '✓', '—'],
+  ['Override prioritas', '—', '—', '—', '✓', 'Opsional', '—'],
+  ['Konfigurasi SPK / SLA', '—', '—', '—', 'Terbatas', '✓', '—'],
+  ['Laporan', 'Milik sendiri', 'Terbatas', 'Terbatas', '✓', '✓', '✓'],
+  ['Audit & pengguna', '—', '—', '—', 'Terbatas', '✓', '—'],
 ]
 
 export default function UserManagementPage() {
@@ -16,16 +24,296 @@ export default function UserManagementPage() {
   const [status, setStatus] = useState('Semua status')
   const [dialog, setDialog] = useState(null)
   const [error, setError] = useState('')
-  const filtered = useMemo(() => users.filter((user) => `${user.name} ${user.email} ${user.team}`.toLowerCase().includes(query.toLowerCase()) && (role === 'Semua role' || user.role === role) && (status === 'Semua status' || user.status === status)), [users, query, role, status])
+  const filtered = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          `${user.name} ${user.email} ${user.team}`.toLowerCase().includes(query.toLowerCase()) &&
+          (role === 'Semua role' || user.role === role) &&
+          (status === 'Semua status' || user.status === status),
+      ),
+    [users, query, role, status],
+  )
   function submit(event) {
-    event.preventDefault(); const data = new FormData(event.currentTarget); const input = { name: String(data.get('name')).trim(), email: String(data.get('email')).trim(), role: data.get('role'), team: data.get('team') || 'Belum ditetapkan' }
-    if (input.name.length < 3 || !/^\S+@\S+\.\S+$/.test(input.email)) { setError('Nama atau alamat email tidak valid.'); return }
-    if (users.some((user) => user.email.toLowerCase() === input.email.toLowerCase() && user.id !== dialog?.user?.id)) { setError('Email sudah digunakan oleh akun lain.'); return }
-    if (dialog?.user) updateUser(dialog.user.id, input); else addUser(input)
-    setDialog(null); setError('')
+    event.preventDefault()
+    const data = new FormData(event.currentTarget)
+    const input = {
+      name: String(data.get('name')).trim(),
+      email: String(data.get('email')).trim(),
+      role: data.get('role'),
+      team: data.get('team') || 'Belum ditetapkan',
+    }
+    if (input.name.length < 3 || !/^\S+@\S+\.\S+$/.test(input.email)) {
+      setError('Nama atau alamat email tidak valid.')
+      return
+    }
+    if (
+      users.some(
+        (user) =>
+          user.email.toLowerCase() === input.email.toLowerCase() && user.id !== dialog?.user?.id,
+      )
+    ) {
+      setError('Email sudah digunakan oleh akun lain.')
+      return
+    }
+    if (dialog?.user) updateUser(dialog.user.id, input)
+    else addUser(input)
+    setDialog(null)
+    setError('')
   }
-  return <div className="page-content"><PageHeading title="Pengguna & role" description="Kelola akun, tim, status, dan akses fitur pengguna." actions={<button className="button button-primary" onClick={() => { setError(''); setDialog({ type: 'edit' }) }}><UserPlus size={15} />Tambah pengguna</button>} /><div className="user-summary"><div><UsersRound size={18} /><span><strong>{users.length} akun</strong><small>Terdaftar di workspace</small></span></div><div><i className="active-state"><i />{users.filter((user) => user.status === 'Aktif').length} aktif</i><i className="inactive-state">{users.filter((user) => user.status === 'Nonaktif').length} nonaktif</i></div></div><section className="panel list-panel"><div className="list-toolbar"><div className="search-field"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama, email, atau tim..." aria-label="Cari pengguna" /></div><div className="toolbar-filters"><select value={role} onChange={(event) => setRole(event.target.value)} aria-label="Filter role"><option>Semua role</option>{roles.map((value) => <option key={value}>{value}</option>)}</select><select value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter status"><option>Semua status</option><option>Aktif</option><option>Nonaktif</option></select></div></div><div className="table-scroll"><table className="ticket-table user-table"><thead><tr><th>Pengguna</th><th>Role</th><th>Tim</th><th>Status</th><th>Aktivitas terakhir</th><th>Aksi</th></tr></thead><tbody>{filtered.map((user) => <tr key={user.id}><td><span className="user-identity"><i className="avatar avatar-blue">{user.name.split(' ').map((part) => part[0]).slice(0, 2).join('')}</i><span><strong>{user.name}</strong><small>{user.email}</small></span></span></td><td><span className="role-tag">{user.role}</span></td><td>{user.team}</td><td><span className={`user-status ${user.status === 'Aktif' ? 'is-active' : 'is-inactive'}`}><i />{user.status}</span></td><td>{user.lastSeen}</td><td><button className="text-link" onClick={() => { setError(''); setDialog({ type: 'edit', user }) }}>Ubah</button><button className="text-link action-inline" onClick={() => setDialog({ type: 'status', user })}>{user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}</button></td></tr>)}</tbody></table></div><div className="table-pagination"><span>Menampilkan <strong>{filtered.length}</strong> dari <strong>{users.length}</strong> pengguna</span></div></section><section className="panel permission-panel"><div className="panel-heading"><div><h2>Matriks akses role</h2><p>Ringkasan akses frontend per role sesuai matriks PRD.</p></div></div><div className="table-scroll"><table className="permission-table"><thead><tr><th>Fitur</th>{roles.map((item) => <th key={item}>{item}</th>)}</tr></thead><tbody>{permissions.map((row) => <tr key={row[0]}>{row.map((item, index) => <td key={index} className={index > 0 && item === '✓' ? 'perm-yes' : ''}>{item}</td>)}</tr>)}</tbody></table></div></section>
-    {dialog?.type === 'edit' && <Modal title={dialog.user ? 'Ubah pengguna' : 'Tambah pengguna'} description="Perubahan akun disimpan lokal dan dicatat di audit trail demo." onClose={() => setDialog(null)}><form className="dialog-form" onSubmit={submit}><label className="form-field"><span>Nama lengkap <b>*</b></span><input name="name" defaultValue={dialog.user?.name} required /></label><label className="form-field"><span>Email <b>*</b></span><input type="email" name="email" defaultValue={dialog.user?.email} required /></label><div className="form-row"><label className="form-field"><span>Role <b>*</b></span><select name="role" defaultValue={dialog.user?.role || 'Pelapor'}>{roles.map((item) => <option key={item}>{item}</option>)}</select></label><label className="form-field"><span>Tim support</span><select name="team" defaultValue={dialog.user?.team || 'IT Support'}>{['IT Support', 'Network Support', 'Application Support', 'Helpdesk', 'Direksi'].map((item) => <option key={item}>{item}</option>)}</select></label></div>{error && <p className="form-error">{error}</p>}<div className="confirm-actions"><button type="button" className="button button-secondary" onClick={() => setDialog(null)}>Batal</button><button className="button button-primary">{dialog.user ? 'Simpan perubahan' : 'Buat akun'}</button></div></form></Modal>}
-    {dialog?.type === 'status' && <ConfirmDialog title={`${dialog.user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'} akun?`} description={`${dialog.user.name} ${dialog.user.status === 'Aktif' ? 'tidak dapat masuk setelah akun dinonaktifkan.' : 'dapat kembali mengakses workspace setelah akun diaktifkan.'}`} confirmLabel={dialog.user.status === 'Aktif' ? 'Nonaktifkan akun' : 'Aktifkan akun'} danger={dialog.user.status === 'Aktif'} onCancel={() => setDialog(null)} onConfirm={() => { updateUser(dialog.user.id, { status: dialog.user.status === 'Aktif' ? 'Nonaktif' : 'Aktif' }); setDialog(null) }} />}
-  </div>
+  return (
+    <div className="page-content">
+      <PageHeading
+        title="Pengguna & role"
+        description="Kelola akun, tim, status, dan akses fitur pengguna."
+        actions={
+          <button
+            className="button button-primary"
+            onClick={() => {
+              setError('')
+              setDialog({ type: 'edit' })
+            }}
+          >
+            <UserPlus size={15} />
+            Tambah pengguna
+          </button>
+        }
+      />
+      <div className="user-summary">
+        <div>
+          <UsersRound size={18} />
+          <span>
+            <strong>{users.length} akun</strong>
+            <small>Terdaftar di workspace</small>
+          </span>
+        </div>
+        <div>
+          <i className="active-state">
+            <i />
+            {users.filter((user) => user.status === 'Aktif').length} aktif
+          </i>
+          <i className="inactive-state">
+            {users.filter((user) => user.status === 'Nonaktif').length} nonaktif
+          </i>
+        </div>
+      </div>
+      <section className="panel list-panel">
+        <div className="list-toolbar">
+          <div className="search-field">
+            <Search size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Cari nama, email, atau tim..."
+              aria-label="Cari pengguna"
+            />
+          </div>
+          <div className="toolbar-filters">
+            <select
+              value={role}
+              onChange={(event) => setRole(event.target.value)}
+              aria-label="Filter role"
+            >
+              <option>Semua role</option>
+              {roles.map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              aria-label="Filter status"
+            >
+              <option>Semua status</option>
+              <option>Aktif</option>
+              <option>Nonaktif</option>
+            </select>
+          </div>
+        </div>
+        <div className="table-scroll">
+          <table className="ticket-table user-table">
+            <thead>
+              <tr>
+                <th>Pengguna</th>
+                <th>Role</th>
+                <th>Tim</th>
+                <th>Status</th>
+                <th>Aktivitas terakhir</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    <span className="user-identity">
+                      <i className="avatar avatar-blue">
+                        {user.name
+                          .split(' ')
+                          .map((part) => part[0])
+                          .slice(0, 2)
+                          .join('')}
+                      </i>
+                      <span>
+                        <strong>{user.name}</strong>
+                        <small>{user.email}</small>
+                      </span>
+                    </span>
+                  </td>
+                  <td>
+                    <span className="role-tag">{user.role}</span>
+                  </td>
+                  <td>{user.team}</td>
+                  <td>
+                    <span
+                      className={`user-status ${user.status === 'Aktif' ? 'is-active' : 'is-inactive'}`}
+                    >
+                      <i />
+                      {user.status}
+                    </span>
+                  </td>
+                  <td>{user.lastSeen}</td>
+                  <td>
+                    <button
+                      className="text-link"
+                      onClick={() => {
+                        setError('')
+                        setDialog({ type: 'edit', user })
+                      }}
+                    >
+                      Ubah
+                    </button>
+                    <button
+                      className="text-link action-inline"
+                      onClick={() => setDialog({ type: 'status', user })}
+                    >
+                      {user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-pagination">
+          <span>
+            Menampilkan <strong>{filtered.length}</strong> dari <strong>{users.length}</strong>{' '}
+            pengguna
+          </span>
+        </div>
+      </section>
+      <section className="panel permission-panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Matriks akses role</h2>
+            <p>Ringkasan akses frontend per role sesuai matriks PRD.</p>
+          </div>
+        </div>
+        <div className="table-scroll">
+          <table className="permission-table">
+            <thead>
+              <tr>
+                <th>Fitur</th>
+                {roles.map((item) => (
+                  <th key={item}>{item}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {permissions.map((row) => (
+                <tr key={row[0]}>
+                  {row.map((item, index) => (
+                    <td key={index} className={index > 0 && item === '✓' ? 'perm-yes' : ''}>
+                      {item}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {dialog?.type === 'edit' && (
+        <Modal
+          title={dialog.user ? 'Ubah pengguna' : 'Tambah pengguna'}
+          description="Perubahan akun disimpan lokal dan dicatat di audit trail demo."
+          onClose={() => setDialog(null)}
+        >
+          <form className="dialog-form" onSubmit={submit}>
+            <label className="form-field">
+              <span>
+                Nama lengkap <b>*</b>
+              </span>
+              <input name="name" defaultValue={dialog.user?.name} required />
+            </label>
+            <label className="form-field">
+              <span>
+                Email <b>*</b>
+              </span>
+              <input type="email" name="email" defaultValue={dialog.user?.email} required />
+            </label>
+            <div className="form-row">
+              <label className="form-field">
+                <span>
+                  Role <b>*</b>
+                </span>
+                <select name="role" defaultValue={dialog.user?.role || 'Pelapor'}>
+                  {roles.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field">
+                <span>Tim support</span>
+                <select name="team" defaultValue={dialog.user?.team || 'IT Support'}>
+                  {[
+                    'IT Support',
+                    'Network Support',
+                    'Application Support',
+                    'Helpdesk',
+                    'Direksi',
+                  ].map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {error && <p className="form-error">{error}</p>}
+            <div className="confirm-actions">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() => setDialog(null)}
+              >
+                Batal
+              </button>
+              <button className="button button-primary">
+                {dialog.user ? 'Simpan perubahan' : 'Buat akun'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {dialog?.type === 'status' && (
+        <ConfirmDialog
+          title={`${dialog.user.status === 'Aktif' ? 'Nonaktifkan' : 'Aktifkan'} akun?`}
+          description={
+            `${dialog.user.name} ` +
+            (dialog.user.status === 'Aktif'
+              ? 'tidak dapat masuk setelah akun dinonaktifkan.'
+              : 'dapat kembali mengakses workspace setelah akun diaktifkan.')
+          }
+          confirmLabel={dialog.user.status === 'Aktif' ? 'Nonaktifkan akun' : 'Aktifkan akun'}
+          danger={dialog.user.status === 'Aktif'}
+          onCancel={() => setDialog(null)}
+          onConfirm={() => {
+            updateUser(dialog.user.id, {
+              status: dialog.user.status === 'Aktif' ? 'Nonaktif' : 'Aktif',
+            })
+            setDialog(null)
+          }}
+        />
+      )}
+    </div>
+  )
 }

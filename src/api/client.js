@@ -14,10 +14,11 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject({
-    code: error.response?.data?.error?.code || 'NETWORK_ERROR',
-    message: error.response?.data?.error?.message || 'Layanan belum dapat dihubungi.',
-    status: error.response?.status,
-    details: error.response?.data?.error?.details,
-  }),
+  (error) =>
+    Promise.reject({
+      code: error.response?.data?.error?.code || 'NETWORK_ERROR',
+      message: error.response?.data?.error?.message || 'Layanan belum dapat dihubungi.',
+      status: error.response?.status,
+      details: error.response?.data?.error?.details,
+    }),
 )

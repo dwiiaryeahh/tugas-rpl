@@ -12,9 +12,169 @@ export default function AuditPage() {
   const [selected, setSelected] = useState(null)
   const actions = [...new Set(audit.map((item) => item.action))]
   const actors = [...new Set(audit.map((item) => item.actor))]
-  const filtered = useMemo(() => audit.filter((item) => `${item.id} ${item.description} ${item.actor} ${item.ticket}`.toLowerCase().includes(query.toLowerCase()) && (action === 'Semua aktivitas' || item.action === action) && (actor === 'Semua pengguna' || item.actor === actor)), [audit, query, action, actor])
-  function exportCsv() { const csv = [['ID', 'Aktivitas', 'Deskripsi', 'Pelaku', 'Role', 'Waktu', 'Tiket'], ...filtered.map((item) => [item.id, item.action, item.description, item.actor, item.role, item.time, item.ticket])].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n'); const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'audit-trail.csv'; link.click(); URL.revokeObjectURL(url) }
-  return <div className="page-content"><PageHeading title="Audit trail" description="Histori tindakan penting yang tersimpan sebagai catatan immutable." actions={<button className="button button-secondary" onClick={exportCsv}><Download size={15} />Ekspor CSV</button>} /><div className="audit-info"><ShieldCheck size={17} /><span>Catatan audit hanya dapat dibaca. Setiap perubahan tiket, konfigurasi, dan akses memiliki identitas pelaku dan waktu.</span></div><section className="panel list-panel"><div className="list-toolbar"><div className="search-field"><Search size={16} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari tiket, pengguna, atau deskripsi..." aria-label="Cari audit" /></div><div className="toolbar-filters"><select value={action} onChange={(event) => setAction(event.target.value)} aria-label="Filter aktivitas"><option>Semua aktivitas</option>{actions.map((item) => <option key={item}>{item}</option>)}</select><select value={actor} onChange={(event) => setActor(event.target.value)} aria-label="Filter pelaku"><option>Semua pengguna</option>{actors.map((item) => <option key={item}>{item}</option>)}</select></div></div><div className="table-scroll"><table className="ticket-table audit-table"><thead><tr><th>ID</th><th>Aktivitas</th><th>Pelaku</th><th>Role</th><th>Waktu</th><th>Tiket terkait</th><th /></tr></thead><tbody>{filtered.map((item) => <tr key={item.id} onClick={() => setSelected(item)}><td className="code-cell">{item.id}</td><td><span className="audit-description"><strong>{item.action}</strong><small>{item.description}</small></span></td><td>{item.actor}</td><td><span className="role-tag">{item.role}</span></td><td>{item.time}</td><td>{item.ticket}</td><td><button className="icon-button" aria-label={`Detail ${item.id}`}><FileSearch size={15} /></button></td></tr>)}</tbody></table></div><div className="table-pagination"><span>Menampilkan <strong>{filtered.length}</strong> catatan · Filter berlaku pada sampel lokal</span></div></section>
-    {selected && <Modal title={`Catatan ${selected.id}`} description="Detail audit bersifat hanya baca." onClose={() => setSelected(null)}><dl className="audit-detail"><dt>Aktivitas</dt><dd>{selected.action}</dd><dt>Deskripsi</dt><dd>{selected.description}</dd><dt>Pelaku</dt><dd>{selected.actor} · {selected.role}</dd><dt>Waktu</dt><dd>{selected.time}</dd><dt>Tiket terkait</dt><dd>{selected.ticket}</dd><dt>Metadata</dt><dd className="metadata-box">{JSON.stringify({ source: 'Frontend demo', immutable: true, record_id: selected.id }, null, 2)}</dd></dl></Modal>}
-  </div>
+  const filtered = useMemo(
+    () =>
+      audit.filter(
+        (item) =>
+          `${item.id} ${item.description} ${item.actor} ${item.ticket}`
+            .toLowerCase()
+            .includes(query.toLowerCase()) &&
+          (action === 'Semua aktivitas' || item.action === action) &&
+          (actor === 'Semua pengguna' || item.actor === actor),
+      ),
+    [audit, query, action, actor],
+  )
+  function exportCsv() {
+    const csv = [
+      ['ID', 'Aktivitas', 'Deskripsi', 'Pelaku', 'Role', 'Waktu', 'Tiket'],
+      ...filtered.map((item) => [
+        item.id,
+        item.action,
+        item.description,
+        item.actor,
+        item.role,
+        item.time,
+        item.ticket,
+      ]),
+    ]
+      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
+      .join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'audit-trail.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  return (
+    <div className="page-content">
+      <PageHeading
+        title="Audit trail"
+        description="Histori tindakan penting yang tersimpan sebagai catatan immutable."
+        actions={
+          <button className="button button-secondary" onClick={exportCsv}>
+            <Download size={15} />
+            Ekspor CSV
+          </button>
+        }
+      />
+      <div className="audit-info">
+        <ShieldCheck size={17} />
+        <span>
+          Catatan audit hanya dapat dibaca. Setiap perubahan tiket, konfigurasi, dan akses memiliki
+          identitas pelaku dan waktu.
+        </span>
+      </div>
+      <section className="panel list-panel">
+        <div className="list-toolbar">
+          <div className="search-field">
+            <Search size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Cari tiket, pengguna, atau deskripsi..."
+              aria-label="Cari audit"
+            />
+          </div>
+          <div className="toolbar-filters">
+            <select
+              value={action}
+              onChange={(event) => setAction(event.target.value)}
+              aria-label="Filter aktivitas"
+            >
+              <option>Semua aktivitas</option>
+              {actions.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+            <select
+              value={actor}
+              onChange={(event) => setActor(event.target.value)}
+              aria-label="Filter pelaku"
+            >
+              <option>Semua pengguna</option>
+              {actors.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="table-scroll">
+          <table className="ticket-table audit-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Aktivitas</th>
+                <th>Pelaku</th>
+                <th>Role</th>
+                <th>Waktu</th>
+                <th>Tiket terkait</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr key={item.id} onClick={() => setSelected(item)}>
+                  <td className="code-cell">{item.id}</td>
+                  <td>
+                    <span className="audit-description">
+                      <strong>{item.action}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                  </td>
+                  <td>{item.actor}</td>
+                  <td>
+                    <span className="role-tag">{item.role}</span>
+                  </td>
+                  <td>{item.time}</td>
+                  <td>{item.ticket}</td>
+                  <td>
+                    <button className="icon-button" aria-label={`Detail ${item.id}`}>
+                      <FileSearch size={15} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="table-pagination">
+          <span>
+            Menampilkan <strong>{filtered.length}</strong> catatan · Filter berlaku pada sampel
+            lokal
+          </span>
+        </div>
+      </section>
+      {selected && (
+        <Modal
+          title={`Catatan ${selected.id}`}
+          description="Detail audit bersifat hanya baca."
+          onClose={() => setSelected(null)}
+        >
+          <dl className="audit-detail">
+            <dt>Aktivitas</dt>
+            <dd>{selected.action}</dd>
+            <dt>Deskripsi</dt>
+            <dd>{selected.description}</dd>
+            <dt>Pelaku</dt>
+            <dd>
+              {selected.actor} · {selected.role}
+            </dd>
+            <dt>Waktu</dt>
+            <dd>{selected.time}</dd>
+            <dt>Tiket terkait</dt>
+            <dd>{selected.ticket}</dd>
+            <dt>Metadata</dt>
+            <dd className="metadata-box">
+              {JSON.stringify(
+                { source: 'Frontend demo', immutable: true, record_id: selected.id },
+                null,
+                2,
+              )}
+            </dd>
+          </dl>
+        </Modal>
+      )}
+    </div>
+  )
 }

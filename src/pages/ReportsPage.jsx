@@ -16,15 +16,221 @@ export default function ReportsPage() {
   const [notice, setNotice] = useState('')
   const categories = [...new Set(tickets.map((ticket) => ticket.category))]
   const techs = users.filter((user) => user.role === 'Teknisi').map((user) => user.name)
-  const filtered = useMemo(() => tickets.filter((ticket) => (category === 'Semua kategori' || ticket.category === category) && (priority === 'Semua prioritas' || ticket.priority === priority) && (technician === 'Semua teknisi' || ticket.assignee === technician) && (sla === 'Semua SLA' || ticket.slaState === sla) && ticketDate(ticket) >= start && ticketDate(ticket) <= end), [tickets, category, priority, technician, sla, start, end])
-  const active = filtered.filter((ticket) => !['Selesai', 'Ditutup', 'Dibatalkan'].includes(ticket.status)).length
+  const filtered = useMemo(
+    () =>
+      tickets.filter(
+        (ticket) =>
+          (category === 'Semua kategori' || ticket.category === category) &&
+          (priority === 'Semua prioritas' || ticket.priority === priority) &&
+          (technician === 'Semua teknisi' || ticket.assignee === technician) &&
+          (sla === 'Semua SLA' || ticket.slaState === sla) &&
+          ticketDate(ticket) >= start &&
+          ticketDate(ticket) <= end,
+      ),
+    [tickets, category, priority, technician, sla, start, end],
+  )
+  const active = filtered.filter(
+    (ticket) => !['Selesai', 'Ditutup', 'Dibatalkan'].includes(ticket.status),
+  ).length
   const resolved = filtered.length - active
   function exportCsv() {
-    const rows = [['Ticket', 'Category', 'Priority', 'Status', 'SLA', 'Assignee'], ...filtered.map((ticket) => [ticket.id, ticket.category, ticket.priority, ticket.status, ticket.slaState, ticket.assignee])]
-    const csv = rows.map((row) => row.map((item) => `"${String(item).replaceAll('"', '""')}"`).join(',')).join('\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'laporan-operasional.csv'; link.click(); URL.revokeObjectURL(url)
+    const rows = [
+      ['Ticket', 'Category', 'Priority', 'Status', 'SLA', 'Assignee'],
+      ...filtered.map((ticket) => [
+        ticket.id,
+        ticket.category,
+        ticket.priority,
+        ticket.status,
+        ticket.slaState,
+        ticket.assignee,
+      ]),
+    ]
+    const csv = rows
+      .map((row) => row.map((item) => `"${String(item).replaceAll('"', '""')}"`).join(','))
+      .join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'laporan-operasional.csv'
+    link.click()
+    URL.revokeObjectURL(url)
   }
-  const select = (label, value, set, options) => <label className="report-filter"><span>{label}</span><select value={value} onChange={(event) => set(event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select></label>
-  const compliance = filtered.length ? `${((filtered.filter((ticket) => ticket.slaState !== 'Breached').length / filtered.length) * 100).toFixed(1)}%` : '—'
-  return <div className="page-content"><PageHeading title="Laporan operasional" description="Analisis volume tiket, pencapaian SLA, dan beban tim." actions={<div className="report-export-actions"><button className="button button-secondary" onClick={() => window.print()}><Download size={14} />PDF / Cetak</button><button className="button button-primary" onClick={exportCsv}><Download size={14} />Ekspor CSV</button></div>} /><section className="panel report-filter-panel"><div className="report-filters"><label className="report-filter"><span>Dari tanggal</span><input type="date" value={start} onChange={(event) => setStart(event.target.value)} /></label><label className="report-filter"><span>Sampai tanggal</span><input type="date" value={end} onChange={(event) => setEnd(event.target.value)} /></label>{select('Kategori', category, setCategory, ['Semua kategori', ...categories])}{select('Prioritas', priority, setPriority, ['Semua prioritas', 'Kritis', 'Tinggi', 'Sedang', 'Rendah'])}{select('Teknisi', technician, setTechnician, ['Semua teknisi', ...techs])}{select('Status SLA', sla, setSla, ['Semua SLA', 'Aman', 'At Risk', 'Breached', 'Paused'])}</div></section><section className="metric-grid report-metrics"><MetricCard icon={Ticket} label="Total tiket · sampel" value={String(filtered.length)} change="Pada rentang dan filter terpilih" /><MetricCard icon={Activity} label="Tiket aktif · sampel" value={String(active)} change="Belum selesai / ditutup" /><MetricCard icon={Check} label="Terselesaikan · sampel" value={String(resolved)} change="Selesai dan ditutup" /><MetricCard icon={Clock3} label="Kepatuhan SLA · sampel" value={compliance} change="Berdasarkan status SLA sampel" /></section><div className="reports-grid"><div className="reports-panel"><TicketTrend /></div><section className="panel category-report"><div className="panel-heading"><div><h2>Tiket berdasarkan kategori</h2><p>Distribusi pada data sampel terpilih</p></div></div>{categories.map((name) => { const amount = filtered.filter((ticket) => ticket.category === name).length; const pct = amount / Math.max(filtered.length, 1) * 100; return <div className="category-bar-row" key={name}><span>{name}</span><div className="category-bar"><i style={{ width: `${pct}%` }} /></div><strong>{amount}</strong></div>})}</section></div><section className="panel"><div className="panel-heading"><div><h2>Ringkasan prioritas</h2><p>Volume, tiket selesai, dan komposisi pada filter ini.</p></div><span className="team-count">{start} — {end}</span></div><div className="report-priorities"><div className="report-row-head"><span>Prioritas</span><span>Total</span><span>Selesai</span><span>Volume relatif</span><span>%</span></div>{['Kritis', 'Tinggi', 'Sedang', 'Rendah'].map((name) => { const group = filtered.filter((ticket) => ticket.priority === name); const done = group.filter((ticket) => ['Selesai', 'Ditutup'].includes(ticket.status)).length; const pct = group.length / Math.max(filtered.length, 1) * 100; return <div key={name}><PriorityBadge value={name} /><strong>{group.length}</strong><span>{done}</span><div className="category-bar"><i style={{ width: `${pct}%` }} /></div><strong>{pct.toFixed(0)}%</strong></div>})}</div></section><section className="panel report-average"><div className="panel-heading"><div><h2>Rata-rata waktu layanan</h2><p>Nilai contoh laporan sampai integrasi analitik tersedia.</p></div></div><div><span><small>Respons pertama</small><strong>42 menit</strong></span><span><small>Resolusi</small><strong>4 jam 28 menit</strong></span><span><small>Tiket terfilter</small><strong>{filtered.length}</strong></span></div></section>{notice && <p role="status" className="inline-success">{notice}</p>}</div>
+  const select = (label, value, set, options) => (
+    <label className="report-filter">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => set(event.target.value)}>
+        {options.map((option) => (
+          <option key={option}>{option}</option>
+        ))}
+      </select>
+    </label>
+  )
+  const compliance = filtered.length
+    ? `${((filtered.filter((ticket) => ticket.slaState !== 'Breached').length / filtered.length) * 100).toFixed(1)}%`
+    : '—'
+  return (
+    <div className="page-content">
+      <PageHeading
+        title="Laporan operasional"
+        description="Analisis volume tiket, pencapaian SLA, dan beban tim."
+        actions={
+          <div className="report-export-actions">
+            <button className="button button-secondary" onClick={() => window.print()}>
+              <Download size={14} />
+              PDF / Cetak
+            </button>
+            <button className="button button-primary" onClick={exportCsv}>
+              <Download size={14} />
+              Ekspor CSV
+            </button>
+          </div>
+        }
+      />
+      <section className="panel report-filter-panel">
+        <div className="report-filters">
+          <label className="report-filter">
+            <span>Dari tanggal</span>
+            <input type="date" value={start} onChange={(event) => setStart(event.target.value)} />
+          </label>
+          <label className="report-filter">
+            <span>Sampai tanggal</span>
+            <input type="date" value={end} onChange={(event) => setEnd(event.target.value)} />
+          </label>
+          {select('Kategori', category, setCategory, ['Semua kategori', ...categories])}
+          {select('Prioritas', priority, setPriority, [
+            'Semua prioritas',
+            'Kritis',
+            'Tinggi',
+            'Sedang',
+            'Rendah',
+          ])}
+          {select('Teknisi', technician, setTechnician, ['Semua teknisi', ...techs])}
+          {select('Status SLA', sla, setSla, [
+            'Semua SLA',
+            'Aman',
+            'At Risk',
+            'Breached',
+            'Paused',
+          ])}
+        </div>
+      </section>
+      <section className="metric-grid report-metrics">
+        <MetricCard
+          icon={Ticket}
+          label="Total tiket · sampel"
+          value={String(filtered.length)}
+          change="Pada rentang dan filter terpilih"
+        />
+        <MetricCard
+          icon={Activity}
+          label="Tiket aktif · sampel"
+          value={String(active)}
+          change="Belum selesai / ditutup"
+        />
+        <MetricCard
+          icon={Check}
+          label="Terselesaikan · sampel"
+          value={String(resolved)}
+          change="Selesai dan ditutup"
+        />
+        <MetricCard
+          icon={Clock3}
+          label="Kepatuhan SLA · sampel"
+          value={compliance}
+          change="Berdasarkan status SLA sampel"
+        />
+      </section>
+      <div className="reports-grid">
+        <div className="reports-panel">
+          <TicketTrend />
+        </div>
+        <section className="panel category-report">
+          <div className="panel-heading">
+            <div>
+              <h2>Tiket berdasarkan kategori</h2>
+              <p>Distribusi pada data sampel terpilih</p>
+            </div>
+          </div>
+          {categories.map((name) => {
+            const amount = filtered.filter((ticket) => ticket.category === name).length
+            const pct = (amount / Math.max(filtered.length, 1)) * 100
+            return (
+              <div className="category-bar-row" key={name}>
+                <span>{name}</span>
+                <div className="category-bar">
+                  <i style={{ width: `${pct}%` }} />
+                </div>
+                <strong>{amount}</strong>
+              </div>
+            )
+          })}
+        </section>
+      </div>
+      <section className="panel">
+        <div className="panel-heading">
+          <div>
+            <h2>Ringkasan prioritas</h2>
+            <p>Volume, tiket selesai, dan komposisi pada filter ini.</p>
+          </div>
+          <span className="team-count">
+            {start} — {end}
+          </span>
+        </div>
+        <div className="report-priorities">
+          <div className="report-row-head">
+            <span>Prioritas</span>
+            <span>Total</span>
+            <span>Selesai</span>
+            <span>Volume relatif</span>
+            <span>%</span>
+          </div>
+          {['Kritis', 'Tinggi', 'Sedang', 'Rendah'].map((name) => {
+            const group = filtered.filter((ticket) => ticket.priority === name)
+            const done = group.filter((ticket) =>
+              ['Selesai', 'Ditutup'].includes(ticket.status),
+            ).length
+            const pct = (group.length / Math.max(filtered.length, 1)) * 100
+            return (
+              <div key={name}>
+                <PriorityBadge value={name} />
+                <strong>{group.length}</strong>
+                <span>{done}</span>
+                <div className="category-bar">
+                  <i style={{ width: `${pct}%` }} />
+                </div>
+                <strong>{pct.toFixed(0)}%</strong>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+      <section className="panel report-average">
+        <div className="panel-heading">
+          <div>
+            <h2>Rata-rata waktu layanan</h2>
+            <p>Nilai contoh laporan sampai integrasi analitik tersedia.</p>
+          </div>
+        </div>
+        <div>
+          <span>
+            <small>Respons pertama</small>
+            <strong>42 menit</strong>
+          </span>
+          <span>
+            <small>Resolusi</small>
+            <strong>4 jam 28 menit</strong>
+          </span>
+          <span>
+            <small>Tiket terfilter</small>
+            <strong>{filtered.length}</strong>
+          </span>
+        </div>
+      </section>
+      {notice && (
+        <p role="status" className="inline-success">
+          {notice}
+        </p>
+      )}
+    </div>
+  )
 }

@@ -14,7 +14,8 @@ export const slaApi = {
 
 export const reportsApi = {
   summary: (params) => apiClient.get('/reports/summary', { params }),
-  export: (format, params) => apiClient.get(`/reports/export/${format}`, { params, responseType: 'blob' }),
+  export: (format, params) =>
+    apiClient.get(`/reports/export/${format}`, { params, responseType: 'blob' }),
 }
 
 export const adminApi = {

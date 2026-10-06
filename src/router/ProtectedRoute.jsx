@@ -14,5 +14,15 @@ export function GuestOnlyRoute() {
 export function RoleGate({ roles, children }) {
   const { user } = useWorkspace()
   if (roles.includes(user?.role)) return children
-  return <div className="page-content"><section className="panel permission-denied"><h1>Akses tidak tersedia</h1><p>Role {user?.role} tidak memiliki izin untuk membuka fitur ini.</p><Link className="button button-secondary" to="/dashboard">Kembali ke dashboard</Link></section></div>
+  return (
+    <div className="page-content">
+      <section className="panel permission-denied">
+        <h1>Akses tidak tersedia</h1>
+        <p>Role {user?.role} tidak memiliki izin untuk membuka fitur ini.</p>
+        <Link className="button button-secondary" to="/dashboard">
+          Kembali ke dashboard
+        </Link>
+      </section>
+    </div>
+  )
 }

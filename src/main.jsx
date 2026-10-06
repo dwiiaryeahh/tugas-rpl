@@ -8,6 +8,10 @@ import './styles/features.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter><WorkspaceProvider><App /></WorkspaceProvider></BrowserRouter>
+    <BrowserRouter>
+      <WorkspaceProvider>
+        <App />
+      </WorkspaceProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 )

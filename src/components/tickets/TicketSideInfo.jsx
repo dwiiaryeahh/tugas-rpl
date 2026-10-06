@@ -2,5 +2,118 @@ import { Clock3, MapPin, Paperclip } from 'lucide-react'
 import { PriorityBadge, StatusBadge } from '../common/Badges'
 
 export function TicketSideInfo({ ticket }) {
-  return <aside className="detail-aside"><section className="panel detail-section"><h2>Penugasan</h2><div className="meta-item"><span>Tim support</span><strong>{ticket.team}</strong></div><div className="aside-divider" /><div className="meta-item"><span>Teknisi</span><strong>{ticket.assignee}</strong></div><div className="meta-item"><span>Ditugaskan pada</span><strong>{ticket.assignee === 'Belum ditugaskan' ? 'Belum ditugaskan' : '5 Okt 2026, 09:22'}</strong></div></section><section className="panel detail-section sla-card"><h2>SLA penyelesaian</h2><div className="sla-clock"><Clock3 size={17} /><strong>{ticket.sla}</strong><span>tersisa</span></div><div className={`sla-track ${ticket.slaState === 'Breached' ? 'track-breached' : ''}`}><i style={{ width: ticket.slaState === 'Breached' ? '100%' : ticket.slaState === 'At Risk' ? '76%' : '34%' }} /></div><div className="sla-deadline"><span>Respons pertama</span><strong>{ticket.responseDeadline || '—'}</strong></div><div className="sla-deadline"><span>Batas resolusi</span><strong>{ticket.resolutionDeadline || '—'}</strong></div><StatusBadge value={ticket.slaState === 'At Risk' ? 'At Risk' : ticket.slaState === 'Breached' ? 'Breached' : ticket.slaState === 'Paused' ? 'Paused' : 'Aman'} /></section><section className="panel detail-section"><h2>Detail layanan</h2><div className="meta-item"><span>Kategori</span><strong>{ticket.category} · {ticket.subcategory || 'Umum'}</strong></div><div className="meta-item"><span>Layanan</span><strong>{ticket.service || '—'}</strong></div><div className="meta-item"><span>Aset</span><strong>{ticket.asset || '—'}</strong></div><div className="meta-item"><span>Lokasi</span><strong className="meta-with-icon"><MapPin size={13} />{ticket.location}</strong></div></section><section className="panel detail-section"><h2>Pelapor & lampiran</h2><div className="meta-item"><span>Pelapor</span><strong>{ticket.requester}</strong></div><div className="meta-item"><span>Waktu dibuat</span><strong>{ticket.created}, 5 Okt 2026</strong></div>{ticket.attachments?.length ? <div className="attachment-list">{ticket.attachments.map((name) => <span key={name}><Paperclip size={13} />{name}</span>)}</div> : <small className="muted-copy">Tidak ada lampiran.</small>}<div className="aside-priorities"><PriorityBadge value={ticket.recommendedPriority || ticket.priority} /><span>Rekomendasi</span><PriorityBadge value={ticket.priority} /><span>Efektif</span></div></section></aside>
+  return (
+    <aside className="detail-aside">
+      <section className="panel detail-section">
+        <h2>Penugasan</h2>
+        <div className="meta-item">
+          <span>Tim support</span>
+          <strong>{ticket.team}</strong>
+        </div>
+        <div className="aside-divider" />
+        <div className="meta-item">
+          <span>Teknisi</span>
+          <strong>{ticket.assignee}</strong>
+        </div>
+        <div className="meta-item">
+          <span>Ditugaskan pada</span>
+          <strong>
+            {ticket.assignee === 'Belum ditugaskan' ? 'Belum ditugaskan' : '5 Okt 2026, 09:22'}
+          </strong>
+        </div>
+      </section>
+      <section className="panel detail-section sla-card">
+        <h2>SLA penyelesaian</h2>
+        <div className="sla-clock">
+          <Clock3 size={17} />
+          <strong>{ticket.sla}</strong>
+          <span>tersisa</span>
+        </div>
+        <div className={`sla-track ${ticket.slaState === 'Breached' ? 'track-breached' : ''}`}>
+          <i
+            style={{
+              width:
+                ticket.slaState === 'Breached'
+                  ? '100%'
+                  : ticket.slaState === 'At Risk'
+                    ? '76%'
+                    : '34%',
+            }}
+          />
+        </div>
+        <div className="sla-deadline">
+          <span>Respons pertama</span>
+          <strong>{ticket.responseDeadline || '—'}</strong>
+        </div>
+        <div className="sla-deadline">
+          <span>Batas resolusi</span>
+          <strong>{ticket.resolutionDeadline || '—'}</strong>
+        </div>
+        <StatusBadge
+          value={
+            ticket.slaState === 'At Risk'
+              ? 'At Risk'
+              : ticket.slaState === 'Breached'
+                ? 'Breached'
+                : ticket.slaState === 'Paused'
+                  ? 'Paused'
+                  : 'Aman'
+          }
+        />
+      </section>
+      <section className="panel detail-section">
+        <h2>Detail layanan</h2>
+        <div className="meta-item">
+          <span>Kategori</span>
+          <strong>
+            {ticket.category} · {ticket.subcategory || 'Umum'}
+          </strong>
+        </div>
+        <div className="meta-item">
+          <span>Layanan</span>
+          <strong>{ticket.service || '—'}</strong>
+        </div>
+        <div className="meta-item">
+          <span>Aset</span>
+          <strong>{ticket.asset || '—'}</strong>
+        </div>
+        <div className="meta-item">
+          <span>Lokasi</span>
+          <strong className="meta-with-icon">
+            <MapPin size={13} />
+            {ticket.location}
+          </strong>
+        </div>
+      </section>
+      <section className="panel detail-section">
+        <h2>Pelapor & lampiran</h2>
+        <div className="meta-item">
+          <span>Pelapor</span>
+          <strong>{ticket.requester}</strong>
+        </div>
+        <div className="meta-item">
+          <span>Waktu dibuat</span>
+          <strong>{ticket.created}, 5 Okt 2026</strong>
+        </div>
+        {ticket.attachments?.length ? (
+          <div className="attachment-list">
+            {ticket.attachments.map((name) => (
+              <span key={name}>
+                <Paperclip size={13} />
+                {name}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <small className="muted-copy">Tidak ada lampiran.</small>
+        )}
+        <div className="aside-priorities">
+          <PriorityBadge value={ticket.recommendedPriority || ticket.priority} />
+          <span>Rekomendasi</span>
+          <PriorityBadge value={ticket.priority} />
+          <span>Efektif</span>
+        </div>
+      </section>
+    </aside>
+  )
 }
